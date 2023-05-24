@@ -20,7 +20,9 @@ class Scip:
         self.path_to_params = Path(path_to_params)
 
         self._model = pyscipopt.Model()
+        logger.info(f"Reading problem {self.path_to_problem}")
         self._model.readProblem(self.path_to_problem)
+        logger.info(f"Reading params {self.path_to_params}")
         self._model.readParams(self.path_to_params)
 
     def optimize(self):
