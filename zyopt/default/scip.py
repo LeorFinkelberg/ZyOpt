@@ -1,14 +1,17 @@
 import typing as t
+
+import pyscipopt
 from pathlib2 import Path
+
+from zyopt._base_model import Model
 from zyopt.common.constants import *
 from zyopt.common.logger import make_logger
 from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
-import pyscipopt
 
 logger = make_logger(__file__)
 
 
-class Scip:
+class ScipModel(Model):
     def __init__(
         self,
         *,
@@ -19,7 +22,8 @@ class Scip:
         PYSCIPOPT_CURRENT_VERSION = tuple(map(int, pyscipopt.__version__.split(".")))
         if PYSCIPOPT_CURRENT_VERSION < PYSCIPOPT_APACHE_2_0_LICENSE_VERSION:
             logger.warning(
-                "You are using SCIP version, which is only available under ZIB ACADEMIC LICENSE. "
+                f"You are using SCIP version {'.'.join(map(str, PYSCIPOPT_CURRENT_VERSION))}, "
+                "which is only available under ZIB ACADEMIC LICENSE. "
                 "See https://www.scipopt.org/academic.txt"
             )
         self.mode = mode
@@ -54,3 +58,31 @@ class Scip:
         Retrieve solution status
         """
         return self._model.getStatus()
+
+    def get_params(self) -> dict:
+        """
+        Gets the values of all parameters as a dict mapping parameter names
+        to their values
+        """
+        return self._model.getParams()
+
+    def write_best_sol(
+        self,
+        path_to_sol: str,
+        write_zeros: bool = True,
+    ):
+        """
+        Write the best feasible primal solution to a file
+        """
+        best_sol: pyscipopt.scip.Solution = self._model.getBestSol()
+        gap: float = self._model.getGap()
+        obj_val: float = self._model.getObjVal()
+
+        logger.info(f"Feasible solution found. SCIP objective: {obj_val:.5g} (gap: {gap * 100:.3g}%)")
+
+        try:
+            self._model.writeSol(best_sol, path_to_sol, write_zeros=write_zeros)
+        except OSError as err:
+            logger.error(err)
+        else:
+            logger.info(f"Sol-file '{path_to_sol}' was successfully written")
