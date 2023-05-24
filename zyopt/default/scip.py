@@ -12,6 +12,10 @@ logger = make_logger(__file__)
 
 
 class ScipModel(Model):
+    """
+    Simple wrapper for SCIP solver
+    """
+
     def __init__(
         self,
         *,
@@ -52,6 +56,16 @@ class ScipModel(Model):
 
         logger.info(f"Running SCIP in {self.mode.upper()} mode ...")
         self._model.optimize()
+
+    def get_best_sol(self) -> dict:
+        """
+        Get the best SCIP sol in dict format
+        """
+
+        sol: pyscipopt.scip.Solution = self._model.getBestSol()
+        vars_: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
+
+        return {var.name: self._model.getSolVal(sol, vars_) for var in vars_}
 
     def get_status(self) -> str:
         """
