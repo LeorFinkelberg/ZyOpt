@@ -65,7 +65,7 @@ class ScipModel(Model):
         sol: pyscipopt.scip.Solution = self._model.getBestSol()
         vars_: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
 
-        return {var.name: self._model.getSolVal(sol, vars_) for var in vars_}
+        return {var.name: self._model.getSolVal(sol, var) for var in vars_}
 
     def get_status(self) -> str:
         """
