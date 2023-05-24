@@ -2,6 +2,7 @@ import typing as t
 from pathlib2 import Path
 from zyopt.common.constants import *
 from zyopt.common.logger import make_logger
+from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
 import pyscipopt
 
 logger = make_logger(__file__)
@@ -15,14 +16,20 @@ class Scip:
         path_to_problem: str,
         path_to_params: str,
     ):
+        PYSCIPOPT_CURRENT_VERSION = tuple(map(int, pyscipopt.__version__.split(".")))
+        if PYSCIPOPT_CURRENT_VERSION < PYSCIPOPT_APACHE_2_0_LICENSE_VERSION:
+            logger.warning(
+                "You are using SCIP version, which is only available under ZIB ACADEMIC LICENSE. "
+                "See https://www.scipopt.org/academic.txt"
+            )
         self.mode = mode
         self.path_to_problem = Path(path_to_problem)
         self.path_to_params = Path(path_to_params)
 
         self._model = pyscipopt.Model()
-        logger.info(f"Reading problem {self.path_to_problem}")
+        logger.info(f"Reading problem: {self.path_to_problem}")
         self._model.readProblem(self.path_to_problem)
-        logger.info(f"Reading params {self.path_to_params}")
+        logger.info(f"Reading params: {self.path_to_params}")
         self._model.readParams(self.path_to_params)
 
     def optimize(self):
