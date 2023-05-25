@@ -6,7 +6,6 @@ import pyscipopt
 from pathlib2 import Path
 from tqdm import tqdm
 
-from zyopt.base_model import Model
 from zyopt.common.constants import *
 from zyopt.common.exceptions import PathToProblemError
 from zyopt.common.logger import make_logger
@@ -15,9 +14,19 @@ from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
 logger = make_logger(__file__)
 
 
-class ScipModel(Model):
+class Scip:
     """
     Simple wrapper for SCIP solver
+
+    Example:
+        model = Scip(
+            solver_mode="milp",
+            path_to_problem="./data/problems/problem.mps",
+            path_to_params="./data/settings/scip_milp.set",
+        )
+        model.optimize()
+        status = model.get_status()
+        ...
     """
 
     def __init__(
@@ -54,9 +63,9 @@ class ScipModel(Model):
         logger.info(f"Reading params: {self.path_to_params}")
         self._model.readParams(self.path_to_params)
 
-        self.all_vars_: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
-        self.all_var_names_: t.Iterable[str] = [var.name for var in self.all_vars_]
-        self.all_vars = pd.Series(self.all_vars_, index=self.all_var_names_)
+        self.all_vars: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
+        self.all_var_names: t.Iterable[str] = [var.name for var in self.all_vars]
+        self._all_vars = pd.Series(self.all_vars, index=self.all_var_names)
 
     def optimize(self):
         """
@@ -83,7 +92,7 @@ class ScipModel(Model):
         Converts SCIP solution to dict
         """
         sol = self._model.getBestSol()
-        return {var.name: self._model.getSolVal(sol, var) for var in self.all_vars_}
+        return {var.name: self._model.getSolVal(sol, var) for var in self.all_vars}
 
     def get_sols(self) -> t.Iterable[pyscipopt.scip.Solution]:
         """
@@ -106,7 +115,6 @@ class ScipModel(Model):
             SCIP_STATUS_USERINTERRUPT,
         ):
             pool_sols: t.Iterable[pyscipopt.scip.Solution] = self.get_sols()
-            print(status)
 
             if pool_sols:
                 return self.convert_best_sol_to_dict()
@@ -158,7 +166,7 @@ class ScipModel(Model):
         """
         Fix vars in base
         """
-        for var in tqdm(self.all_vars.loc[var_names]):
+        for var in tqdm(self._all_vars.loc[var_names]):
             var_name: str = var.name
             value: float = base_for_fix.loc[var_name]
             self._model.fixVar(var, value)
