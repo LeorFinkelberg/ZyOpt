@@ -43,7 +43,7 @@ class Scip(Strategy):
         model = Scip(
             solver_mode="milp",
             path_to_params="./data/problems/problem.mps",
-            model=other_model,
+            problem=other_model,
         )
     """
 
@@ -53,14 +53,15 @@ class Scip(Strategy):
         solver_mode: str,
         path_to_params: str,
         path_to_problem: t.Optional[str] = None,
-        model: t.Optional[pyscipopt.scip.Model] = None,
+        problem: t.Optional[pyscipopt.scip.Model] = None,
     ):
         self.solver_mode = solver_mode
         self.path_to_params = Path(path_to_params)
 
-        if model is not None:
-            logger.info(f"Reading model: {model}")
-            self._model = model
+        if problem is not None:
+            logger.info(f"Reading problem: {problem}")
+            self._model = problem
+            self.path_to_problem = None
         else:
             self.path_to_problem = Path(path_to_problem)
             self._model = pyscipopt.Model()
@@ -116,21 +117,21 @@ class Scip(Strategy):
         """
         status: str = self.get_status()
 
-        if status == SCIP_STATUS_IFEASIBLE:
-            return None
-        elif status in (
-            SCIP_STATUS_OPTIMAL,
-            SCIP_STATUS_GAPLIMIT,
-            SCIP_STATUS_TIMELIMIT,
-            SCIP_STATUS_USERINTERRUPT,
+        if (
+            status
+            in (
+                SCIP_STATUS_OPTIMAL,
+                SCIP_STATUS_GAPLIMIT,
+                SCIP_STATUS_TIMELIMIT,
+            )
+            and self.get_sols()
         ):
-            pool_sols: t.Iterable[pyscipopt.scip.Solution] = self.get_sols()
-
-            if pool_sols:
-                return self.convert_best_sol_to_dict()
-            else:
-                logger.info("Process is interrupted ...")
-                sys.exit(-1)
+            return self.convert_best_sol_to_dict()
+        elif status == SCIP_STATUS_USERINTERRUPT:
+            logger.info(PROCESS_INTERRUPT_MSG)
+            sys.exit(-1)
+        elif status == SCIP_STATUS_INFEASIBLE:
+            return None
 
     def get_status(self) -> str:
         """
@@ -172,7 +173,7 @@ class Scip(Strategy):
         else:
             logger.info(f"Sol-file '{path_to_sol}' was successfully written")
 
-    def fix_vars(self, base_for_fix: pd.Series, var_names: t.List[str]):
+    def fix_vars(self, base_for_fix: pd.Series, var_names: t.List[str]) -> pyscipopt.scip.Model:
         """
         Fix vars in base
         """
