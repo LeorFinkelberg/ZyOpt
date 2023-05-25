@@ -7,26 +7,44 @@ from pathlib2 import Path
 from tqdm import tqdm
 
 from zyopt.common.constants import *
-from zyopt.common.exceptions import PathToProblemError
 from zyopt.common.logger import make_logger
 from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
+from zyopt.strategy import Strategy
 
 logger = make_logger(__file__)
 
+PYSCIPOPT_CURRENT_VERSION = tuple(map(int, pyscipopt.__version__.split(".")))
+if PYSCIPOPT_CURRENT_VERSION < PYSCIPOPT_APACHE_2_0_LICENSE_VERSION:
+    logger.warning(
+        f"You are using SCIP version {'.'.join(map(str, PYSCIPOPT_CURRENT_VERSION))}, "
+        "which is only available under ZIB ACADEMIC LICENSE. \n\t"
+        "See https://www.scipopt.org/academic.txt"
+    )
 
-class Scip:
+
+class Scip(Strategy):
     """
     Simple wrapper for SCIP solver
 
     Example:
         model = Scip(
-            solver_mode="milp",
+            solver_mode="milp",  # "relax" or "milp"
             path_to_problem="./data/problems/problem.mps",
             path_to_params="./data/settings/scip_milp.set",
         )
         model.optimize()
         status = model.get_status()
         ...
+        # Or
+        other_model = pyscipopt.Model()
+        other_model.readProblem("...")
+        other_model.readParams("...")
+
+        model = Scip(
+            solver_mode="milp",
+            path_to_params="./data/problems/problem.mps",
+            model=other_model,
+        )
     """
 
     def __init__(
@@ -37,13 +55,6 @@ class Scip:
         path_to_problem: t.Optional[str] = None,
         model: t.Optional[pyscipopt.scip.Model] = None,
     ):
-        PYSCIPOPT_CURRENT_VERSION = tuple(map(int, pyscipopt.__version__.split(".")))
-        if PYSCIPOPT_CURRENT_VERSION < PYSCIPOPT_APACHE_2_0_LICENSE_VERSION:
-            logger.warning(
-                f"You are using SCIP version {'.'.join(map(str, PYSCIPOPT_CURRENT_VERSION))}, "
-                "which is only available under ZIB ACADEMIC LICENSE. \n\t"
-                "See https://www.scipopt.org/academic.txt"
-            )
         self.solver_mode = solver_mode
         self.path_to_params = Path(path_to_params)
 
@@ -51,11 +62,7 @@ class Scip:
             logger.info(f"Reading model: {model}")
             self._model = model
         else:
-            try:
-                self.path_to_problem = Path(path_to_problem)
-            except TypeError:
-                raise PathToProblemError(incorrect_path_to_problem=path_to_problem)
-
+            self.path_to_problem = Path(path_to_problem)
             self._model = pyscipopt.Model()
             logger.info(f"Reading problem: {self.path_to_problem}")
             self._model.readProblem(self.path_to_problem)
@@ -66,6 +73,9 @@ class Scip:
         self.all_vars: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
         self.all_var_names: t.Iterable[str] = [var.name for var in self.all_vars]
         self._all_vars = pd.Series(self.all_vars, index=self.all_var_names)
+
+        # Validate params
+        self._validate_params()
 
     def optimize(self):
         """
@@ -172,3 +182,18 @@ class Scip:
             self._model.fixVar(var, value)
 
         return self._model
+
+    def _validate_params(self):
+        """
+        Validate params
+        """
+        self._valid_solver_mode: t.Set[str] = {SOLVER_MODE_RELAX, SOLVER_MODE_MILP}
+
+        if self.solver_mode not in self._valid_solver_mode:
+            raise ValueError(
+                f"Error! Unknown solver mode: {self.solver_mode}. "
+                f"Valid solver mode: {list(self._valid_solver_mode)}"
+            )
+
+        self._check_file_path(self.path_to_problem)
+        self._check_file_path(self.path_to_params)
