@@ -1,14 +1,10 @@
-import sys
 import typing as t
-from copy import copy
 
 import numpy as np
 import pandas as pd
 import pyscipopt
-from pathlib2 import Path
-from tqdm import tqdm
 
-from zyopt._base_model import Model
+from zyopt.base_model import Model
 from zyopt.common.constants import *
 from zyopt.common.logger import make_logger
 from zyopt.config import DECIMALS, RANDOM_SEED
@@ -159,32 +155,3 @@ class FixBinaryIntegerVarsInRelaxSolModel(Model):
         )
 
         return [var.name for var in vars_]
-
-    @staticmethod
-    def _make_mask(base_for_fix: pd.Series, lower_threshold: float, upper_threshold: float) -> pd.Series:
-        """
-        Makes bool mask
-        """
-        if lower_threshold == upper_threshold:
-            # lower_threshold = upper_threshold = 0 or lower_threshold = upper_threshold = 1
-            fix_value = lower_threshold
-            mask = base_for_fix == fix_value
-        elif upper_threshold is None:
-            # Example: lower_threshold = 0.05 and upper_threshold = NULL
-            base_for_fix[base_for_fix <= lower_threshold] = 0.0
-            mask = base_for_fix == 0.0
-        elif lower_threshold is None:
-            # Example: upper_threshold = 0.95 and lower_threshold = NULL
-            base_for_fix[base_for_fix >= upper_threshold] = 1.0
-            mask = base_for_fix == 1.0
-        else:
-            # Example: lower_threshold = 0.05 and upper_threshold = 0.95
-            base_for_fix[base_for_fix <= lower_threshold] = 0.0
-            mask_for_zero = base_for_fix == 0.0
-
-            base_for_fix[base_for_fix >= upper_threshold] = 1.0
-            mask_for_one = base_for_fix == 1.0
-
-            mask = mask_for_zero | mask_for_one
-
-        return mask

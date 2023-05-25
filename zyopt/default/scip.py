@@ -6,8 +6,9 @@ import pyscipopt
 from pathlib2 import Path
 from tqdm import tqdm
 
-from zyopt._base_model import Model
+from zyopt.base_model import Model
 from zyopt.common.constants import *
+from zyopt.common.exceptions import PathToProblemError
 from zyopt.common.logger import make_logger
 from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
 
@@ -31,19 +32,20 @@ class ScipModel(Model):
         if PYSCIPOPT_CURRENT_VERSION < PYSCIPOPT_APACHE_2_0_LICENSE_VERSION:
             logger.warning(
                 f"You are using SCIP version {'.'.join(map(str, PYSCIPOPT_CURRENT_VERSION))}, "
-                "which is only available under ZIB ACADEMIC LICENSE. "
+                "which is only available under ZIB ACADEMIC LICENSE. \n\t"
                 "See https://www.scipopt.org/academic.txt"
             )
         self.solver_mode = solver_mode
         self.path_to_params = Path(path_to_params)
 
         if model is not None:
+            logger.info(f"Reading model: {model}")
             self._model = model
         else:
             try:
                 self.path_to_problem = Path(path_to_problem)
-            except TypeError as err:
-                raise
+            except TypeError:
+                raise PathToProblemError(incorrect_path_to_problem=path_to_problem)
 
             self._model = pyscipopt.Model()
             logger.info(f"Reading problem: {self.path_to_problem}")
@@ -60,6 +62,8 @@ class ScipModel(Model):
         """
         Optimize the problem
         """
+        # We have to extract variables again to break the connection
+        # of the model with the attributes of the class
         _all_vars: t.Iterable[pyscipopt.scip.Variable] = self._model.getVars()
 
         if self.solver_mode == SOLVER_MODE_RELAX:
@@ -68,7 +72,7 @@ class ScipModel(Model):
             ]
 
             var: pyscipopt.scip.Variable
-            for var in _bin_int_vars:
+            for var in tqdm(_bin_int_vars):
                 self._model.chgVarType(var, VAR_TYPE_CONTINUOUS)
 
         logger.info(f"Running SCIP in {self.solver_mode.upper()} mode ...")
@@ -102,6 +106,7 @@ class ScipModel(Model):
             SCIP_STATUS_USERINTERRUPT,
         ):
             pool_sols: t.Iterable[pyscipopt.scip.Solution] = self.get_sols()
+            print(status)
 
             if pool_sols:
                 return self.convert_best_sol_to_dict()
