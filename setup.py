@@ -8,7 +8,7 @@ HERE = Path(__file__).parent.resolve()
 
 # The text of the README file
 NAME = "zyopt"
-VERSION = "0.1.0"
+VERSION = "0.0.1"
 AUTHOR = "Digital Industrial Platform"
 SHORT_DESCRIPTION = (
     "Add-in for the SCIP solver with support for heuristics, "
