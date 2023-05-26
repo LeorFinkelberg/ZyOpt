@@ -9,8 +9,11 @@ HERE = Path(__file__).parent.resolve()
 # The text of the README file
 NAME = "zyopt"
 VERSION = "0.1.0"
-AUTHOR = "ZIP"
-SHORT_DESCRIPTION = "Automated machine learning framework for composite pipelines"
+AUTHOR = "Digital Industrial Platform"
+SHORT_DESCRIPTION = (
+    "Add-in for the SCIP solver with support for heuristics, "
+    "classical machine learning and deep learning methods"
+)
 README = Path(HERE, "README.md").read_text(encoding="utf-8")
 URL = ""
 REQUIRES_PYTHON = ">=3.8"
@@ -46,10 +49,6 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=["test*"]),
     include_package_data=True,
     install_requires=_get_requirements("requirements.txt"),
-    extras_require={
-        key: _get_requirements(Path("other_requirements", f"{key}.txt"))
-        for key in ("docs", "examples", "extra", "profilers")
-    },
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3.8",
