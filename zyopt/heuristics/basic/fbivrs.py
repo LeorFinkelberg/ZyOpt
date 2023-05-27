@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pyscipopt
 
+from zyopt.common.auxiliary_functions import timer
 from zyopt.common.constants import *
 from zyopt.common.logger import make_logger
 from zyopt.config import DECIMALS, RANDOM_SEED
@@ -65,6 +66,7 @@ class InRelaxSolVarsFixator(Strategy):
         # Validate params
         self._validate_params()
 
+    @timer
     def optimize(self):
         """
         Optimize the problem
