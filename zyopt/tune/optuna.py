@@ -396,9 +396,9 @@ class Objective:
             )
             and model.getSols()
         ):
-            return model.getObjVal()
+            return model.getObjVal(), model.getTotalTime()
         elif status == SCIP_STATUS_INFEASIBLE:
-            return np.float("inf")
+            return np.float("inf"), np.float("inf")
 
 
 class SolverParamsTuner:
@@ -413,7 +413,8 @@ class SolverParamsTuner:
         pruner: t.Optional[optuna.pruners._base.BasePruner] = None,
         path_to_storage: t.Optional[str] = None,
         load_if_exsits: bool = False,
-        direction: str = "minimize",
+        direction_for_objective: str = "minimize",
+        direction_for_time: str = "minimize",
     ):
         self.study_name = study_name
         self.path_to_storage = f"sqlite:///{path_to_storage}"
@@ -424,7 +425,8 @@ class SolverParamsTuner:
         self.n_trials = n_trials
         self.limits_gap = limits_gap
         self.limits_time = limits_time
-        self.direction = direction
+        self.direction_for_objective = direction_for_objective
+        self.direction_for_time = direction_for_time
         self.obj = Objective(self.path_to_problem)
 
     def tune(self) -> dict:
@@ -432,7 +434,7 @@ class SolverParamsTuner:
         Tune solver params
         """
         study = optuna.create_study(
-            direction=self.direction,
+            directions=(self.direction_for_objective, self.direction_for_time),
             study_name=self.study_name,
             storage=self.path_to_storage,
             sampler=self.sampler,
