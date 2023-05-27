@@ -12,4 +12,13 @@ SCIP_STATUS_GAPLIMIT = "gaplimit"
 SCIP_STATUS_USERINTERRUPT = "userinterrupt"
 SCIP_STATUS_TIMELIMIT = "timelimit"
 
+PRESOLVING_DEFAULT = "default"
+PRESOLVING_AGGRESSIVE = "aggressive"
+PRESOLVING_FAST = "fast"
+
+EMPHASIS_EASYCIP = "easycip"
+EMPHASIS_FEASIBILITY = "feasibility"
+EMPHASIS_OPTIMALITY = "optimality"
+EMPHASIS_HARDLP = "hardlp"
+
 PROCESS_INTERRUPT_MSG = "Process is interrupted ..."
