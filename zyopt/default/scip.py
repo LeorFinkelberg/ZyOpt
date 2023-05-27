@@ -117,19 +117,17 @@ class Scip(Strategy):
         """
         status: str = self.get_status()
 
-        if (
-            status
-            in (
-                SCIP_STATUS_OPTIMAL,
-                SCIP_STATUS_GAPLIMIT,
-                SCIP_STATUS_TIMELIMIT,
-            )
-            and self.get_sols()
+        if status in (
+            SCIP_STATUS_OPTIMAL,
+            SCIP_STATUS_GAPLIMIT,
+            SCIP_STATUS_TIMELIMIT,
+            SCIP_STATUS_USERINTERRUPT,
         ):
-            return self.convert_best_sol_to_dict()
-        elif status == SCIP_STATUS_USERINTERRUPT:
-            logger.info(PROCESS_INTERRUPT_MSG)
-            sys.exit(-1)
+            if self.get_sols():
+                return self.convert_best_sol_to_dict()
+            else:
+                logger.info(PROCESS_INTERRUPT_MSG)
+                sys.exit(-1)
         elif status == SCIP_STATUS_INFEASIBLE:
             return None
 

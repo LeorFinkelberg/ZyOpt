@@ -105,19 +105,17 @@ class InRelaxSolVarsFixator(Strategy):
             _milp_model.optimize()
             status: str = _milp_model.get_status()
 
-            if (
-                status
-                in (
-                    SCIP_STATUS_OPTIMAL,
-                    SCIP_STATUS_GAPLIMIT,
-                    SCIP_STATUS_TIMELIMIT,
-                )
-                and _milp_model.get_sols()
+            if status in (
+                SCIP_STATUS_OPTIMAL,
+                SCIP_STATUS_GAPLIMIT,
+                SCIP_STATUS_TIMELIMIT,
+                SCIP_STATUS_USERINTERRUPT,
             ):
-                _milp_model.write_best_sol(self.path_to_sol)
-            elif status == SCIP_STATUS_USERINTERRUPT:
-                logger.info(PROCESS_INTERRUPT_MSG)
-                sys.exit(-1)
+                if _milp_model.get_sols():
+                    _milp_model.write_best_sol(self.path_to_sol)
+                else:
+                    logger.info(PROCESS_INTERRUPT_MSG)
+                    sys.exit(-1)
             elif status == SCIP_STATUS_INFEASIBLE:
                 np.random.seed(RANDOM_SEED)
 
@@ -156,20 +154,18 @@ class InRelaxSolVarsFixator(Strategy):
 
                     if status == SCIP_STATUS_INFEASIBLE:
                         continue
-                    elif (
-                        status
-                        in (
-                            SCIP_STATUS_OPTIMAL,
-                            SCIP_STATUS_GAPLIMIT,
-                            SCIP_STATUS_TIMELIMIT,
-                        )
-                        and _milp_model.get_sols()
+                    elif status in (
+                        SCIP_STATUS_OPTIMAL,
+                        SCIP_STATUS_GAPLIMIT,
+                        SCIP_STATUS_TIMELIMIT,
+                        SCIP_STATUS_USERINTERRUPT,
                     ):
-                        _milp_model.write_best_sol(self.path_to_sol)
-                        break
-                    elif status == SCIP_STATUS_USERINTERRUPT:
-                        logger.info(PROCESS_INTERRUPT_MSG)
-                        sys.exit(-1)
+                        if _milp_model.get_sols():
+                            _milp_model.write_best_sol(self.path_to_sol)
+                            break
+                        elif status == SCIP_STATUS_USERINTERRUPT:
+                            logger.info(PROCESS_INTERRUPT_MSG)
+                            sys.exit(-1)
         else:
             logger.info("Infeasible RELAX solution...")
             sys.exit(-1)
