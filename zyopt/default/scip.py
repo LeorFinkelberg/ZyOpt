@@ -6,7 +6,6 @@ import pyscipopt
 from pathlib2 import Path
 from tqdm import tqdm
 
-from zyopt.common.auxiliary_functions import timer
 from zyopt.common.constants import *
 from zyopt.common.logger import make_logger
 from zyopt.config import PYSCIPOPT_APACHE_2_0_LICENSE_VERSION
@@ -79,7 +78,6 @@ class Scip(Strategy):
         # Validate params
         self._validate_params()
 
-    @timer
     def optimize(self):
         """
         Optimize the problem
