@@ -3,6 +3,7 @@ import typing as t
 import numpy as np
 import optuna
 import pyscipopt
+from optuna.study.study import Study
 
 from zyopt.common.constants import *
 
@@ -411,13 +412,13 @@ class SolverParamsTuner:
         limits_time: t.Optional[float] = 180,
         sampler: t.Optional[optuna.samplers._base.BaseSampler] = None,
         pruner: t.Optional[optuna.pruners._base.BasePruner] = None,
-        path_to_storage: t.Optional[str] = None,
+        storage: t.Optional[str] = None,
         load_if_exsits: bool = False,
         direction_for_objective: str = "minimize",
         direction_for_time: str = "minimize",
     ):
         self.study_name = study_name
-        self.path_to_storage = f"sqlite:///{path_to_storage}"
+        self.storage = storage
         self.path_to_problem = path_to_problem
         self.sampler = sampler
         self.pruner = pruner
@@ -429,14 +430,14 @@ class SolverParamsTuner:
         self.direction_for_time = direction_for_time
         self.obj = Objective(self.path_to_problem)
 
-    def tune(self) -> dict:
+    def tune(self) -> Study:
         """
         Tune solver params
         """
         study = optuna.create_study(
             directions=(self.direction_for_objective, self.direction_for_time),
             study_name=self.study_name,
-            storage=self.path_to_storage,
+            storage=self.storage,
             sampler=self.sampler,
             pruner=self.pruner,
             load_if_exists=self.load_if_exists,
@@ -450,4 +451,4 @@ class SolverParamsTuner:
             n_trials=self.n_trials,
         )
 
-        return study.best_params
+        return study
