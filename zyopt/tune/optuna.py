@@ -12,13 +12,22 @@ class Objective:
     Objective function for tuning
     """
 
-    def __init__(self, path_to_problem: str):
+    def __init__(
+        self,
+        path_to_problem: str,
+        limits_gap: t.Optional[None] = None,
+        limits_time: t.Optional[float] = None,
+    ):
         # Hold this implementation specific arguments as the fields of the class
         self.path_to_problem = path_to_problem
+        self.limits_gap = limits_gap
+        self.limits_time = limits_time
 
     def __call__(self, trial):
         # Calculation an objective value by using the extra arguments
         base_params = {
+            "limits/gap": self.limits_gap,
+            "limits/time": self.limits_time,
             "conflict/preferbinary": trial.suggest_categorical("conflict_preferbinary", [True, False]),
             "branching/preferbinary": trial.suggest_categorical("branching_preferbinary", [True, False]),
             "heuristics/farkasdiving/freq": trial.suggest_categorical(
@@ -398,6 +407,8 @@ class SolverParamsTuner:
         study_name: str,
         path_to_problem: str,
         n_trials: int = 100,
+        limits_gap: t.Optional[float] = 0.01,
+        limits_time: t.Optional[float] = 180,
         sampler: t.Optional[optuna.samplers._base.BaseSampler] = None,
         pruner: t.Optional[optuna.pruners._base.BasePruner] = None,
         path_to_storage: t.Optional[str] = None,
@@ -411,6 +422,8 @@ class SolverParamsTuner:
         self.pruner = pruner
         self.load_if_exists = load_if_exsits
         self.n_trials = n_trials
+        self.limits_gap = limits_gap
+        self.limits_time = limits_time
         self.direction = direction
         self.obj = Objective(self.path_to_problem)
 
@@ -426,6 +439,13 @@ class SolverParamsTuner:
             pruner=self.pruner,
             load_if_exists=self.load_if_exists,
         )
-        study.optimize(Objective(self.path_to_problem), n_trials=self.n_trials)
+        study.optimize(
+            Objective(
+                path_to_problem=self.path_to_problem,
+                limits_gap=self.limits_gap,
+                limits_time=self.limits_time,
+            ),
+            n_trials=self.n_trials,
+        )
 
         return study.best_params
