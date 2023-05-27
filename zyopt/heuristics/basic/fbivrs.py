@@ -153,6 +153,10 @@ class InRelaxSolVarsFixator(Strategy):
                     status: str = _milp_model.get_status()
 
                     if status == SCIP_STATUS_INFEASIBLE:
+                        logger.info(
+                            "Unfortunately, it was not possible to find a solution. "
+                            "We try another perturbation of the relaxed solution"
+                        )
                         continue
                     elif status in (
                         SCIP_STATUS_OPTIMAL,
