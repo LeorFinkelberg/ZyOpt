@@ -39,7 +39,7 @@ setuptools.setup(
     name=NAME,
     version=VERSION,
     author=AUTHOR,
-    author_email="itmo.nss.team@gmail.com",
+    author_email="",
     description=SHORT_DESCRIPTION,
     long_description=README,
     long_description_content_type="text/x-rst",
