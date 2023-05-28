@@ -449,12 +449,13 @@ class SolverParamsTuner:
     Tuner solver params
 
     Example:
+        ```python
         tuner = SolverParamsTuner(
             study_name="scip_tune",
             storage="sqlite:///scip_tune.db",
             path_to_problem="./data/problems/problem.mps",
             n_trials=150,
-            limits_time=600,
+            limits_time=600,  # 600 sec
             sampler=optuna.samplers.TPESampler(),
             pruner=optuna.pruners.HyperbandPruner(),
             direction_for_objective="maximize",
@@ -463,7 +464,24 @@ class SolverParamsTuner:
         study = tuner.tune()
         objective, total_time = study.best_trials[-1].values
         print(study.best_trials[-1].params)
-
+        ```
+        ```python
+        tuner = SolverParamsTuner(
+            study_name="scip_tune",
+            path_to_problem="./data/problems/problem.mps",
+            limits_time=600,  # 600 sec
+            n_jobs=-1,
+            limits_gap=0.01,
+            limits_time=60,
+            show_progress_bar=True,
+        )
+        best_params: dict = tuner.tuner(return_best_params_by_time=True)
+        model = pyscipopt.Model()
+        model.readProblem("./data/problems/other_problem.mps")
+        model.setParams(best_params)
+        model.optimize()
+        status = model.getStatus()
+        ```
     """
 
     def __init__(

@@ -20,6 +20,7 @@ class InRelaxSolVarsFixator(Strategy):
     Fix Binary and Integer Variables in Relax Solution with Perturbation
 
     Example:
+        ```python
         model = InRelaxSolVarsFixator(
             path_to_problem="./data/problems/problem.mps",
             path_to_relax_params="./data/settings/scip_relax.set",
@@ -34,6 +35,7 @@ class InRelaxSolVarsFixator(Strategy):
             distr_upper_threshold: float = 0.1,
         )
         model.optimize()
+        ```
     """
 
     def __init__(

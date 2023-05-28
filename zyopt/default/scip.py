@@ -27,6 +27,7 @@ class Scip(Strategy):
     Simple wrapper for SCIP solver
 
     Example:
+        ```python
         model = Scip(
             solver_mode="milp",  # "relax" or "milp"
             path_to_problem="./data/problems/problem.mps",
@@ -34,8 +35,8 @@ class Scip(Strategy):
         )
         model.optimize()
         status = model.get_status()
-        ...
-        # Or
+        ```
+        ```python
         other_model = pyscipopt.Model()
         other_model.readProblem("...")
         other_model.readParams("...")
@@ -45,6 +46,7 @@ class Scip(Strategy):
             path_to_params="./data/problems/problem.mps",
             problem=other_model,
         )
+        ```
     """
 
     def __init__(
