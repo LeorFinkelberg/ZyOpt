@@ -168,10 +168,10 @@ class Scip(Strategy):
 
         try:
             self._model.writeSol(best_sol, path_to_sol, write_zeros=write_zeros)
-        except OSError as err:
-            logger.error(err)
+        except OSError:
+            raise
         else:
-            logger.info(f"Sol-file '{path_to_sol}' was successfully written")
+            logger.info(FILE_SUCCESS_WRITE_MSG.format(path_to_sol))
 
     def fix_vars(self, base_for_fix: pd.Series, var_names: t.List[str]) -> pyscipopt.scip.Model:
         """

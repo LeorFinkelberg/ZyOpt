@@ -25,7 +25,6 @@ class InRelaxSolVarsFixator(Strategy):
             path_to_problem="./data/problems/problem.mps",
             path_to_relax_params="./data/settings/scip_relax.set",
             path_to_milp_params="./data/settings/scip_milp.set",
-            path_to_sol="./data/sols/milp.sol",
             use_binary=False,
             use_integer=True,
             fix_vars_lower_threshold: float = 0.0,
@@ -35,6 +34,7 @@ class InRelaxSolVarsFixator(Strategy):
             distr_upper_threshold: float = 0.1,
         )
         model.optimize()
+        model.write_best_sol("./data/sols/milp.sol")
         ```
     """
 
@@ -43,7 +43,6 @@ class InRelaxSolVarsFixator(Strategy):
         path_to_problem: str,
         path_to_relax_params: str,
         path_to_milp_params: str,
-        path_to_sol: str,
         use_binary: bool = True,
         use_integer: bool = True,
         fix_vars_lower_threshold: float = 0.0,
@@ -56,7 +55,6 @@ class InRelaxSolVarsFixator(Strategy):
         self.path_to_problem = path_to_problem
         self.path_to_relax_params = path_to_relax_params
         self.path_to_milp_params = path_to_milp_params
-        self.path_to_sol = path_to_sol
         self.use_binary = use_binary
         self.use_integer = use_integer
         self.fix_vars_lower_threshold = fix_vars_lower_threshold
@@ -114,7 +112,8 @@ class InRelaxSolVarsFixator(Strategy):
                 SCIP_STATUS_USERINTERRUPT,
             ):
                 if _milp_model.get_sols():
-                    _milp_model.write_best_sol(self.path_to_sol)
+                    logger.info(FEASIBLE_SOL_FOUND_MSG)
+                    self.best_model = _milp_model
                 else:
                     logger.info(PROCESS_INTERRUPT_MSG)
                     sys.exit(-1)
@@ -167,7 +166,8 @@ class InRelaxSolVarsFixator(Strategy):
                         SCIP_STATUS_USERINTERRUPT,
                     ):
                         if _milp_model.get_sols():
-                            _milp_model.write_best_sol(self.path_to_sol)
+                            logger.info(FEASIBLE_SOL_FOUND_MSG)
+                            self.best_model = _milp_model
                             break
                         elif status == SCIP_STATUS_USERINTERRUPT:
                             logger.info(PROCESS_INTERRUPT_MSG)
@@ -175,6 +175,17 @@ class InRelaxSolVarsFixator(Strategy):
         else:
             logger.info("Infeasible RELAX solution...")
             sys.exit(-1)
+
+    def write_best_sol(self, path_to_sol: str, write_zeros: bool = True):
+        """
+        Write the best feasible primal solution to a file
+        """
+        try:
+            self.best_model.write_best_sol(path_to_sol, write_zeros=write_zeros)
+        except OSError:
+            raise
+        else:
+            logger.info(FILE_SUCCESS_WRITE_MSG.format(path_to_sol))
 
     @staticmethod
     def _get_vars_by_type(

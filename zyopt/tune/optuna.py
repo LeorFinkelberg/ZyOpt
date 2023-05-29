@@ -1,3 +1,4 @@
+import json
 import sys
 import typing as t
 from collections import ChainMap
@@ -6,10 +7,13 @@ from operator import attrgetter
 import optuna
 import pyscipopt
 from optuna.study.study import Study
+from pathlib2 import Path
 
 from zyopt.common.constants import *
+from zyopt.common.exceptions import UnsupportedFileFormatError
 from zyopt.common.logger import make_logger
 from zyopt.config import INF
+from zyopt.strategy import Strategy
 
 logger = make_logger(__file__)
 
@@ -444,7 +448,7 @@ class Objective:
             return float("inf"), float("inf")
 
 
-class SolverParamsTuner:
+class SolverParamsTuner(Strategy):
     """
     Tuner solver params
 
@@ -532,7 +536,7 @@ class SolverParamsTuner:
             lpseed=self.lpseed,
         )
 
-    def tune(self, return_best_params_by_time: bool = False) -> t.Union[Study, t.ChainMap]:
+    def optimize(self, return_best_params_by_time: bool = False) -> t.Union[Study, dict]:
         """
         Tune solver params
         """
@@ -577,10 +581,40 @@ class SolverParamsTuner:
 
                 _chain.append(_sub_params)
 
-            return ChainMap(*_chain)
+            self.best_params = dict(ChainMap(*_chain))
+
+            return self.best_params
         else:
             if study.best_trials:
                 return study
             else:
                 logger.info(PROCESS_INTERRUPT_MSG)
                 sys.exit(-1)
+
+    def write_best_params(self, path_to_settings: str):
+        """
+        Write best params in JSON or SCIP formats
+        """
+        suffix = Path(path_to_settings).suffix
+        try:
+            with open(path_to_settings, mode="w") as f:
+                if suffix == ".set":
+                    for key, value in self.best_params.items():
+                        f.write(f"{key} = {value}\n")
+                elif suffix == ".json":
+                    json.dump(self.best_params, f)
+                else:
+                    raise UnsupportedFileFormatError(
+                        f"Error! Unsupported file format: {suffix}. Valid formats: {self._valid_formats}"
+                    )
+        except OSError:
+            raise
+        else:
+            logger.info(FILE_SUCCESS_WRITE_MSG.format(path_to_settings))
+
+    def _validate_params(self):
+        """
+        Validate params
+        """
+
+        self._valid_formats: t.Set[str] = {".json", ".set"}

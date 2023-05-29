@@ -42,3 +42,5 @@ HEURISTICS_SHIFTING_FREQ_KEY = SCIP_PARAM_HEURISTICS_SHIFTING_FREQ.replace("/", 
 LP_INITALGORITHM_KEY = SCIP_PARAM_LP_INITALGORITHM.replace("/", "_")
 
 PROCESS_INTERRUPT_MSG = "Process is interrupted ..."
+FEASIBLE_SOL_FOUND_MSG = "Feasible primal solution has been found"
+FILE_SUCCESS_WRITE_MSG = "File '{}' was successfully written"
