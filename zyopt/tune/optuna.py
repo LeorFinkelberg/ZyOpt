@@ -444,7 +444,7 @@ class Objective:
             and model.getSols()
         ):
             return model.getObjVal(), model.getTotalTime()
-        elif status == SCIP_STATUS_INFEASIBLE:
+        else:
             return float("inf"), float("inf")
 
 
