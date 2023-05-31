@@ -1,6 +1,7 @@
 # _ZyOpt_
 
-[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![Supported versions](https://img.shields.io/badge/python-3.8+-blue.svg)
 
 ZyOpt is add-in for the SCIP solver with support for:
 - heuristics (for example, fixing zero binary and integer variables)
