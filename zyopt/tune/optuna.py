@@ -449,6 +449,8 @@ class Objective:
 
 
 class SolverParamsTuner(Strategy):
+    # TODO: replace arg `pruner` with arg `pruning`[bool] and implement custom Pruner for SCIP
+    # If `pruning`=True then use SCIPPruner, otherwise use `optuna.pruners.NopPruner()`
     """
     Tuner solver params
 
@@ -536,7 +538,7 @@ class SolverParamsTuner(Strategy):
             lpseed=self.lpseed,
         )
 
-    def optimize(self, return_best_params_by_time: bool = False) -> t.Union[Study, dict]:
+    def optimize(self, return_best_params_by_time: bool = True) -> t.Union[Study, dict]:
         """
         Tune solver params
         """
